@@ -1,9 +1,45 @@
-﻿<Window x:Class="PrismDemo.Views.MainWindow"
+﻿<!--
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    - 自动关联View和ViewModel的核心配置
+    
+    这行 XAML 属性的作用是：告诉 Prism 框架自动帮你找到当前View对应的ViewModel，并完成二者的绑定.
+    你无需手动在后台代码中创建 ViewModel 实例、设置 DataContext。
+    
+    工作原理（Prism 的约定大于配置）
+    - 命名约定：View 名为 XXXView → ViewModel 名为 XXXViewModel
+    - 目录约定（默认）：
+    - - View 通常放在 Views 目录下；
+    - - ViewModel 通常放在 ViewModels 目录下；
+    - - 命名空间也需对应（比如 YourApp.Views → YourApp.ViewModels）。
+    
+    当你给 View 加上 AutoWireViewModel="True" 后，Prism 会：
+    1. 解析当前 View 的名称（比如 MainWindow）；
+    2. 按照约定拼接出 ViewModel 的名称（MainWindowViewModel）；
+    3. 通过依赖注入容器（DI）创建 ViewModel 实例；
+    4. 自动将 ViewModel 赋值给 View 的 DataContext。
+    
+    DataContext是View和 ViewModel之间的“数据桥梁”
+    
+    在 WPF 中，所有 UI 元素（如 TextBlock、Button、TextBox 等）都有 DataContext 属性，它的核心作用是：
+    - 为当前 UI 元素及其所有子元素的数据绑定提供一个默认的数据源对象；
+    - 当你在 XAML 中写 {Binding 属性名} 时，WPF 会自动从当前元素的 DataContext 中查找这个属性，无需手动指定数据源。
+    
+    简单来说，它帮你省去了注入ViewModel的过程
+    public MainWindow()
+    {
+    InitializeComponent();
+    // 手动创建 ViewModel 实例并设置 DataContext
+    this.DataContext = new MainWindowViewModel();
+    }
+-->
+<Window x:Class="PrismDemo.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:prism="http://prismlibrary.com/"
-        prism:ViewModelLocator.AutoWireViewModel="True"
-        Title="{Binding Title}" Height="350" Width="525" >
+        Title="{Binding Title}"
+        Width="525"
+        Height="350"
+        prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid>
         <ContentControl prism:RegionManager.RegionName="ContentRegion" />
     </Grid>
