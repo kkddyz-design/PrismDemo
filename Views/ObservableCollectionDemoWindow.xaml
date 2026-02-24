@@ -1,24 +1,54 @@
-﻿<Window x:Class="PrismDemo.Views.ObservableCollectionDemoWindow"
+﻿<!-- 1. xmlns:converters xmlns:models 引入转换器和模型命名空间 -->
+<Window x:Class="PrismDemo.Views.ObservableCollectionDemoWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:PrismDemo.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:PrismDemo.Views"
+        xmlns:models="clr-namespace:PrismDemo.Models"
         xmlns:prism="http://prismlibrary.com/"
-        Title="ObservableCollection示例"
+        Title="带状态的设备列表"
         Width="800"
         Height="450"
         prism:ViewModelLocator.AutoWireViewModel="True">
-    <StackPanel>
 
-        <ListBox Width="300"
-                 Height="150"
-                 ItemsSource="{Binding DeviceList}"
-                 SelectedItem="{Binding SelectedDevice, Mode=TwoWay}" />
+    <!-- 2. 注册转换器实例 x:Key 注册时的ID，相当于变量名 -->
+    <Window.Resources>
+        <converters:StatusToColorConverter x:Key="StatusToColorConverter" />
+    </Window.Resources>
 
-        <!-- 新增按钮：绑定Prism的DelegateCommand -->
-        <Button Width="100" Content="新增设备" Command="{Binding AddDeviceCommand}" />
 
-        <!-- 删除按钮：无需CommandParameter，直接用ViewModel的SelectedDevice -->
-        <Button Width="100" Content="删除选中" Command="{Binding RemoveDeviceCommand}" />
-    </StackPanel>
+    <!-- 使用Border包裹整个StackPanel，并设置边距和样式 -->
+    <Border Width="450"
+            Padding="15"
+            Background="#F8F8F8"
+            BorderBrush="#E0E0E0"
+            BorderThickness="1"
+            CornerRadius="8">
+        <StackPanel>
+            <!-- 3. 修改ListBox：展示设备名称+状态，状态文字带颜色 -->
+            <ListBox Width="400"
+                     Height="200"
+                     ItemsSource="{Binding DeviceList}"
+                     SelectedItem="{Binding SelectedDevice, Mode=TwoWay}">
+                <!-- 自定义ListBox项模板：显示名称+状态 -->
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Width="150" Text="{Binding DeviceName}" />
+                            <!-- Foreground 字体颜色 表示绑定Status,并通过StatusToColorConverter这个转换器，将Status转换为Brush-->
+                            <TextBlock Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" Text="{Binding Status}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- 4. 按钮区域：新增+删除+切换状态 -->
+            <StackPanel Orientation="Horizontal">
+                <Button Width="100" Command="{Binding AddDeviceCommand}" Content="新增设备" />
+                <Button Width="100" Command="{Binding RemoveDeviceCommand}" Content="删除选中" />
+                <Button Width="120" Command="{Binding ToggleStatusCommand}" Content="切换设备状态" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
 </Window>

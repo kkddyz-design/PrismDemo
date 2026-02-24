@@ -1,12 +1,10 @@
 ﻿using Prism.Commands;
 using Prism.Mvvm;
+using PrismDemo.Models;
 using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
-// 文件放在PrismDemo.ViewModels下只是物理上的。
-// 需要在逻辑上声明ObservableCollectionDemoWindowViewModel属于PrismDemo.ViewModels命名空间
-// 不然对于xaml不能自动绑定
 
 namespace PrismDemo.ViewModels
 {
@@ -14,49 +12,79 @@ namespace PrismDemo.ViewModels
     public class ObservableCollectionDemoWindowViewModel : BindableBase
     {
 
-        // 定义SelectedDevice属性（绑定ListBox选中项，否则删除时选中项为null）
-        private string _selectedDevice;
+        // 1. 选中的设备（改为DeviceInfo类型）
+        private DeviceInfo _selectedDevice;
 
-        public string SelectedDevice
+        public DeviceInfo SelectedDevice
         {
             get => _selectedDevice;
 
-            // 用SetProperty实现双向绑定通知，确保选中项变化时更新
+            // ref让SetProperty方法能够直接修改外部的私有字段 _status 的值
+            // 内部调用调用RaisePropertyChanged(nameof(Status))，触发PropertyChanged事件
             set => SetProperty(ref _selectedDevice, value);
         }
 
-        // 定义ObservableCollection属性
-        public ObservableCollection<string> DeviceList { get; } = new ObservableCollection<string>();
+        // 2. 设备列表（改为DeviceInfo集合）
+        public ObservableCollection<DeviceInfo> DeviceList { get; } = new ObservableCollection<DeviceInfo>();
 
-        // 新增元素的命令
+        // 3. 命令定义（新增状态切换命令）
         public ICommand AddDeviceCommand { get; }
 
-        // 删除选中元素的命令
         public ICommand RemoveDeviceCommand { get; }
+
+        public ICommand ToggleStatusCommand { get; }
 
         public ObservableCollectionDemoWindowViewModel()
         {
+            // 初始化命令
             AddDeviceCommand = new DelegateCommand(OnAddDevice);
             RemoveDeviceCommand = new DelegateCommand(OnRemoveDevice);
+            ToggleStatusCommand = new DelegateCommand(OnToggleStatus);
 
-            // 初始化数据
-            DeviceList.Add("PLC-192.168.1.100");
-            DeviceList.Add("传感器-车间A-01");
+            // 初始化数据（带状态）
+            DeviceList.Add(new DeviceInfo { DeviceName = "PLC-192.168.1.100", Status = DeviceStatus.Normal });
+            DeviceList.Add(new DeviceInfo { DeviceName = "传感器-车间A-01", Status = DeviceStatus.Offline });
         }
 
-        // 添加元素：UI会自动刷新
+        // 新增设备（默认状态为正常）
         private void OnAddDevice()
         {
-            // 模拟新增设备（如从Modbus读取的设备名称）
-            DeviceList.Add($"新设备-{DateTime.Now:HHmmss}");
+            DeviceList.Add(new DeviceInfo
+            {
+                DeviceName = $"新设备-{DateTime.Now:HHmmss}",
+                Status = DeviceStatus.Normal
+            });
         }
 
-        // SelectedDevice双向绑定了,在UI界面选择时同步修改SelectedDevice变量
+        // 删除选中设备
         private void OnRemoveDevice()
         {
-            if(!string.IsNullOrEmpty(SelectedDevice)) {
+            if(SelectedDevice != null) {
                 DeviceList.Remove(SelectedDevice);
+                SelectedDevice = null; // 清空选中项
             }
+        }
+
+        // 切换选中设备的状态（正常→故障→离线循环）
+        private void OnToggleStatus()
+        {
+            if(SelectedDevice == null) {
+                return;
+            }
+
+            SelectedDevice.Status = SelectedDevice.Status switch
+            {
+                DeviceStatus.Normal => DeviceStatus.Error,
+                DeviceStatus.Error => DeviceStatus.Offline,
+                DeviceStatus.Offline => DeviceStatus.Normal,
+                _ => DeviceStatus.Normal
+            };
+
+            // 这个方法触发的是 “SelectedDevice 属性（整个对象）的变更通知”-- ObservableCollection感知不到
+            // 而非SelectedDevice.Status（对象内部属性）的通知
+
+            // Prism 的SetProperty方法已经自动帮你调用了RaisePropertyChanged
+            // RaisePropertyChanged(nameof(SelectedDevice));
         }
 
     }
