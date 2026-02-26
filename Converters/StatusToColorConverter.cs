@@ -24,10 +24,12 @@ namespace PrismDemo.Converters
         // 正向转换：状态→颜色
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            // 特殊情况，返回黑色
             if(value == null || !(value is DeviceStatus)) {
                 return Brushes.Black;
             }
 
+            // 设备状态切换: Normal -> Error -> Offline
             return (DeviceStatus)value switch
             {
                 DeviceStatus.Normal => Brushes.Green,

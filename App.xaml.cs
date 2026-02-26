@@ -12,7 +12,7 @@ namespace PrismDemo
         protected override Window CreateShell()
         {
             // 通过依赖注入解析指定窗口（Prism推荐）
-            return Container.Resolve<ObservableCollectionDemoWindow>();
+            return Container.Resolve<DataTemplateDemoWindow>();
 
             // return Container.Resolve<MainWindow>();
         }
